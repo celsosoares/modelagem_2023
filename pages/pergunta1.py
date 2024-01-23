@@ -1,33 +1,58 @@
 import streamlit as st
+import pandas as pd
 import pymysql
 
 st.title('Pergunta 1')
 
 st.subheader('Qual é o total de despesas por programa ao longo do período escolhido pelo usuário em um local determinado?')
 
+def exibir_resultados(resultados):
+    if not resultados:
+        st.write("Nenhum resultado encontrado.")
+        return
+
+    df = pd.DataFrame(resultados)
+
+    titulos = ["Nome do Órgão",
+               "Descrição do Programa",
+               "Data",
+               "Total de Despesas (R$)"]
+    
+    df_titulos = pd.DataFrame([titulos])
+    df = pd.concat([df_titulos, df], ignore_index=True)
+
+    st.table(df)
+
 def consultar_despesas_por_programa():
     connection = pymysql.connect(
         host='localhost',
         user='root',
         password='root',
-        db='exec_orcamentaria_sp'
+        db='dw_exec_orcamentaria_sp'
     )
     cursor = connection.cursor()
 
-    # consulta_sql = f"""
-    # SELECT p.descricao AS programa, SUM(d.valorAtualizado) AS total_despesas
-    # FROM despesa d
-    # INNER JOIN programa p ON d.projetoAtividade_id = p.id
-    # WHERE d.data_despesa BETWEEN 'data_inicio' AND 'data_fim'
-    # AND d.local = 'local_determinado'
-    # GROUP BY p.descricao;
-    # """
-
     consulta_sql = f"""
-    SELECT p.descricao AS programa, SUM(d.valorAtualizado) AS total_despesas
-    FROM despesa d
-    INNER JOIN programa p ON d.projetoAtividade_id = p.id
-    GROUP BY p.descricao;
+    SELECT
+        o.descricao AS orgao_descricao,
+        p.descricao AS programa_descricao,
+        di.data_id AS periodo_pesquisado,
+        SUM(fd.valorAtualizado) AS total_despesas
+    FROM
+        fatoDespesa fd
+    JOIN
+        dimOrgao o ON fd.orgao_id = o.id
+    JOIN
+        dimPrograma p ON fd.programa_id = p.id
+    JOIN
+        dimData di ON fd.dimData_inicial_keyData = di.keyData
+    WHERE
+        di.data_id >= '2022-01-01' AND di.data_id <= '2022-12-31'
+        AND o.descricao = 'Fundo Municipal de Desenvolvimento Social'
+    GROUP BY
+        o.descricao,
+        p.descricao,
+        di.data_id;
     """
 
     try:
@@ -42,18 +67,8 @@ def consultar_despesas_por_programa():
         raise e
 
 
-# Main
 try:
     resultados = consultar_despesas_por_programa()
-
-    # if resultados:
-    #     st.write("Total de despesas por programa:")
-    #     for resultado in resultados:
-    #         st.write(f"Programa: {resultado[0]}, Total de Despesas: {resultado[1]}")
-    # else:
-    #     st.write("Nenhum resultado encontrado para o período e local especificados.")
-
-    st.write(resultados)
-
+    exibir_resultados(resultados)
 except Exception as e:
     st.error(f"Ocorreu um erro na consulta: {e}")

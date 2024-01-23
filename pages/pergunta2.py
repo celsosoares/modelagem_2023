@@ -1,35 +1,61 @@
 import streamlit as st
+import pandas as pd
+
 import pymysql
 
 st.title('Pergunta 2')
 
 st.subheader('Quais são as principais fontes de despesa em um determinado órgão durante o ano escolhido pelo usuário em um local determinado?')
 
+def exibir_resultados(resultados):
+    if not resultados:
+        st.write("Nenhum resultado encontrado.")
+        return
+
+    df = pd.DataFrame(resultados)
+
+    titulos = ["Nome do Órgão",
+               "Fonte",
+               "Data",
+               "Total de Despesas (R$)"]
+    
+    df_titulos = pd.DataFrame([titulos])
+    df = pd.concat([df_titulos, df], ignore_index=True)
+
+    st.table(df)
+
 def consultar_fontes_de_despesa_por_orgao():
     connection = pymysql.connect(
         host='localhost',
         user='root',
         password='root',
-        db='exec_orcamentaria_sp'
+        db='dw_exec_orcamentaria_sp'
     )
     cursor = connection.cursor()
 
-    # consulta_sql = f"""
-    # SELECT d.fonte_id, SUM(d.valorAtualizado) AS total_despesas_fonte
-    # FROM despesa d
-    # WHERE d.ano = 'ano_escolhido'
-    # AND d.local = 'local_determinado'
-    # AND d.orgao_id = 'id_orgao_escolhido'
-    # GROUP BY d.fonte_id
-    # ORDER BY total_despesas_fonte DESC;
-    # """
-
     consulta_sql = f"""
-    SELECT d.fonte_id, SUM(d.valorAtualizado) AS total_despesas_fonte
-    FROM despesa d
-    GROUP BY d.fonte_id
-    ORDER BY total_despesas_fonte DESC;
+    SELECT
+        o.descricao AS orgao_descricao,
+        f.descricao AS fonte_descricao,
+        d.ano_nome AS periodo_selecionado,
+        SUM(fd.valorAtualizado) AS total_despesas
+    FROM
+        fatoDespesa fd
+    JOIN
+        dimOrgao o ON fd.orgao_id = o.id
+    JOIN
+        dimFonte f ON fd.fonte_id = f.id
+    JOIN
+        dimData d ON fd.dimData_inicial_keyData = d.keyData
+    WHERE
+        d.ano_nome = '2023'
+        AND o.descricao = 'Fundo Municipal de Desenvolvimento Social'
+    GROUP BY
+        o.descricao,
+        f.descricao,
+        d.ano_nome;
     """
+
 
     try:
         cursor.execute(consulta_sql)
@@ -46,15 +72,6 @@ def consultar_fontes_de_despesa_por_orgao():
 # Main
 try:
     resultados = consultar_fontes_de_despesa_por_orgao()
-
-    # if resultados:
-    #     st.write("Total de despesas por programa:")
-    #     for resultado in resultados:
-    #         st.write(f"Programa: {resultado[0]}, Total de Despesas: {resultado[1]}")
-    # else:
-    #     st.write("Nenhum resultado encontrado para o período e local especificados.")
-
-    st.write(resultados)
-
+    exibir_resultados(resultados)
 except Exception as e:
     st.error(f"Ocorreu um erro na consulta: {e}")
