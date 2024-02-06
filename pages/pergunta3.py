@@ -24,13 +24,14 @@ def exibir_resultados(resultados):
 
 def consultar_locais():
     connection = pymysql.connect(
-        host='localhost',
+        host='viaduct.proxy.rlwy.net',
         user='root',
-        password='root',
-        db='dw_exec_orcamentaria_sp'
+        password='24c3b-bDbCdAC4aAh3A6GFEc12AAFg-E',
+        port=57386,
+        db='railway'
     )
     cursor = connection.cursor()
-    consulta_sql = "SELECT DISTINCT bairro FROM dimOrgao;"
+    consulta_sql = "SELECT DISTINCT bairro FROM dimorgao;"
     cursor.execute(consulta_sql)
     locais = [local[0] for local in cursor.fetchall()]
     connection.close()
@@ -38,19 +39,20 @@ def consultar_locais():
 
 def consultar_projetos_atividades(local, data_inicial, data_final):
     connection = pymysql.connect(
-        host='localhost',
+        host='viaduct.proxy.rlwy.net',
         user='root',
-        password='root',
-        db='dw_exec_orcamentaria_sp'
+        password='24c3b-bDbCdAC4aAh3A6GFEc12AAFg-E',
+        port=57386,
+        db='railway'
     )
     cursor = connection.cursor()
 
     consulta_sql = f"""
     SELECT do.bairro, dpa.descricao, di.data_id, AVG(fd.valorAtualizado) AS gasto_medio
-    FROM fatoDespesa fd
-    JOIN dimOrgao do ON fd.orgao_id = do.id
-    JOIN dimProjetoAtividade dpa ON fd.projetoAtividade_id = dpa.id
-    JOIN dimData di ON fd.dimData_inicial_keyData = di.keyData
+    FROM fatodespesa fd
+    JOIN dimorgao do ON fd.orgao_id = do.id
+    JOIN dimprojetoatividade dpa ON fd.projetoAtividade_id = dpa.id
+    JOIN dimdata di ON fd.dimdata_inicial_keyData = di.keyData
     WHERE do.bairro = '{local}' AND di.data_id >= '{data_inicial}' AND di.data_id <= '{data_final}'
     GROUP BY do.bairro, dpa.descricao, di.data_id
     ORDER BY gasto_medio DESC;

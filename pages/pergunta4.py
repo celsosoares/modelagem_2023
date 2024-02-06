@@ -25,13 +25,14 @@ def exibir_resultados(resultados):
 
 def consultar_locais():
     connection = pymysql.connect(
-        host='localhost',
+        host='viaduct.proxy.rlwy.net',
         user='root',
-        password='root',
-        db='dw_exec_orcamentaria_sp'
+        password='24c3b-bDbCdAC4aAh3A6GFEc12AAFg-E',
+        port=57386,
+        db='railway'
     )
     cursor = connection.cursor()
-    consulta_sql = "SELECT DISTINCT bairro FROM dimOrgao;"
+    consulta_sql = "SELECT DISTINCT bairro FROM dimorgao;"
     cursor.execute(consulta_sql)
     locais = [local[0] for local in cursor.fetchall()]
     connection.close()
@@ -39,13 +40,14 @@ def consultar_locais():
 
 def consultar_subfuncoes():
     connection = pymysql.connect(
-        host='localhost',
+        host='viaduct.proxy.rlwy.net',
         user='root',
-        password='root',
-        db='dw_exec_orcamentaria_sp'
+        password='24c3b-bDbCdAC4aAh3A6GFEc12AAFg-E',
+        port=57386,
+        db='railway'
     )
     cursor = connection.cursor()
-    consulta_sql = "SELECT DISTINCT descricaoSubFunc FROM dimSubFuncao;"
+    consulta_sql = "SELECT DISTINCT descricaoSubFunc FROM dimsubfuncao;"
     cursor.execute(consulta_sql)
     subfuncoes = [subfuncao[0] for subfuncao in cursor.fetchall()]
     connection.close()
@@ -53,13 +55,14 @@ def consultar_subfuncoes():
 
 def consultar_orgaos(local):
     connection = pymysql.connect(
-        host='localhost',
+        host='viaduct.proxy.rlwy.net',
         user='root',
-        password='root',
-        db='dw_exec_orcamentaria_sp'
+        password='24c3b-bDbCdAC4aAh3A6GFEc12AAFg-E',
+        port=57386,
+        db='railway'
     )
     cursor = connection.cursor()
-    consulta_sql = f"SELECT DISTINCT descricao FROM dimOrgao WHERE bairro = '{local}';"
+    consulta_sql = f"SELECT DISTINCT descricao FROM dimorgao WHERE bairro = '{local}';"
     cursor.execute(consulta_sql)
     orgaos = [orgao[0] for orgao in cursor.fetchall()]
     connection.close()
@@ -67,19 +70,20 @@ def consultar_orgaos(local):
 
 def consultar_despesas(orgao, subfuncao, local, data_inicial, data_final):
     connection = pymysql.connect(
-        host='localhost',
+        host='viaduct.proxy.rlwy.net',
         user='root',
-        password='root',
-        db='dw_exec_orcamentaria_sp'
+        password='24c3b-bDbCdAC4aAh3A6GFEc12AAFg-E',
+        port=57386,
+        db='railway'
     )
     cursor = connection.cursor()
 
     consulta_sql = f"""
     SELECT do.descricao AS orgao_descricao, dsf.descricaoSubFunc, do.bairro AS bairro, di.data_id, SUM(fd.valorAtualizado) AS total_despesas
-    FROM fatoDespesa fd
-    JOIN dimOrgao do ON fd.orgao_id = do.id
-    JOIN dimSubFuncao dsf ON fd.subFuncao_id = dsf.id
-    JOIN dimData di ON fd.dimData_inicial_keyData = di.keyData
+    FROM fatodespesa fd
+    JOIN dimorgao do ON fd.orgao_id = do.id
+    JOIN dimsubfuncao dsf ON fd.subFuncao_id = dsf.id
+    JOIN dimdata di ON fd.dimData_inicial_keyData = di.keyData
     WHERE do.descricao = '{orgao}' AND dsf.descricaoSubFunc = '{subfuncao}'
     AND do.bairro = '{local}' AND di.data_id >= '{data_inicial}' AND di.data_id <= '{data_final}'
     GROUP BY do.descricao, dsf.descricaoSubFunc, do.bairro, di.data_id

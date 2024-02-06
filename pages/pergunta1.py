@@ -19,9 +19,9 @@ def exibir_resultados(resultados):
 
 def consultar_orgaos():
     connection = pymysql.connect(
-        host='localhost', user='root', password='root', db='dw_exec_orcamentaria_sp')
+        host='viaduct.proxy.rlwy.net', user='root',port=57386 ,password='24c3b-bDbCdAC4aAh3A6GFEc12AAFg-E', db='railway')
     cursor = connection.cursor()
-    consulta_sql = "SELECT descricao FROM dimOrgao;"
+    consulta_sql = "SELECT descricao FROM dimorgao;"
     cursor.execute(consulta_sql)
     orgaos = [orgao[0] for orgao in cursor.fetchall()]
     connection.close()
@@ -32,14 +32,14 @@ def consultar_programas(orgao):
         return ["None"]
 
     connection = pymysql.connect(
-        host='localhost', user='root', password='root', db='dw_exec_orcamentaria_sp')
+        host='viaduct.proxy.rlwy.net', user='root',port=57386 ,password='24c3b-bDbCdAC4aAh3A6GFEc12AAFg-E', db='railway')
     cursor = connection.cursor()
 
     consulta_sql = f"""
     SELECT DISTINCT dp.descricao
-    FROM dimOrgao do
-    JOIN fatoDespesa fd ON do.id = fd.orgao_id
-    JOIN dimPrograma dp ON fd.programa_id = dp.id
+    FROM dimorgao do
+    JOIN fatodespesa fd ON do.id = fd.orgao_id
+    JOIN dimprograma dp ON fd.programa_id = dp.id
     WHERE do.descricao = '{orgao}';
     """
     
@@ -55,11 +55,11 @@ def consultar_bairros(orgao):
         return ["None"]
 
     connection = pymysql.connect(
-        host='localhost', user='root', password='root', db='dw_exec_orcamentaria_sp')
+        host='viaduct.proxy.rlwy.net', user='root',port=57386 ,password='24c3b-bDbCdAC4aAh3A6GFEc12AAFg-E', db='railway')
     cursor = connection.cursor()
 
     consulta_sql = f"""
-    SELECT DISTINCT bairro FROM dimOrgao 
+    SELECT DISTINCT bairro FROM dimorgao 
     WHERE descricao = '{orgao}';
     """
     
@@ -72,7 +72,7 @@ def consultar_bairros(orgao):
 
 def consultar_despesas_por_programa(data_inicial, data_final, orgao, programa, bairro):
     connection = pymysql.connect(
-        host='localhost', user='root', password='root', db='dw_exec_orcamentaria_sp')
+        host='viaduct.proxy.rlwy.net', user='root',port=57386 ,password='24c3b-bDbCdAC4aAh3A6GFEc12AAFg-E', db='railway')
     cursor = connection.cursor()
 
     where_clause = f"di.data_id >= '{data_inicial}' AND di.data_id <= '{data_final}'"
@@ -92,13 +92,13 @@ def consultar_despesas_por_programa(data_inicial, data_final, orgao, programa, b
         di.data_id AS periodo_pesquisado,
         SUM(fd.valorAtualizado) AS total_despesas
     FROM
-        fatoDespesa fd
+        fatodespesa fd
     JOIN
-        dimOrgao o ON fd.orgao_id = o.id
+        dimorgao o ON fd.orgao_id = o.id
     JOIN
-        dimPrograma p ON fd.programa_id = p.id
+        dimprograma p ON fd.programa_id = p.id
     JOIN
-        dimData di ON fd.dimData_inicial_keyData = di.keyData
+        dimdata di ON fd.dimData_inicial_keyData = di.keyData
     WHERE
         {where_clause}
     GROUP BY

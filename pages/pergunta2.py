@@ -25,13 +25,14 @@ def exibir_resultados(resultados):
 
 def consultar_orgaos():
     connection = pymysql.connect(
-        host='localhost',
+        host='viaduct.proxy.rlwy.net',
         user='root',
-        password='root',
-        db='dw_exec_orcamentaria_sp'
+        password='24c3b-bDbCdAC4aAh3A6GFEc12AAFg-E',
+        port=57386,
+        db='railway'
     )
     cursor = connection.cursor()
-    consulta_sql = "SELECT descricao FROM dimOrgao;"
+    consulta_sql = "SELECT descricao FROM dimorgao;"
     cursor.execute(consulta_sql)
     orgaos = [orgao[0] for orgao in cursor.fetchall()]
     connection.close()
@@ -39,20 +40,21 @@ def consultar_orgaos():
 
 def consultar_fontes(orgao, ano):
     connection = pymysql.connect(
-        host='localhost',
+        host='viaduct.proxy.rlwy.net',
         user='root',
-        password='root',
-        db='dw_exec_orcamentaria_sp'
+        password='24c3b-bDbCdAC4aAh3A6GFEc12AAFg-E',
+        port=57386,
+        db='railway'
     )
     cursor = connection.cursor()
 
     consulta_sql = f"""
     SELECT do.descricao AS orgao_descricao, df.descricao AS fonte_descricao, do.bairro AS bairro,
            EXTRACT(YEAR FROM di.data_id) AS ano, SUM(fd.valorAtualizado) AS total_despesas
-    FROM fatoDespesa fd
-    JOIN dimOrgao do ON fd.orgao_id = do.id
-    JOIN dimFonte df ON fd.fonte_id = df.id
-    JOIN dimData di ON fd.dimData_inicial_keyData = di.keyData
+    FROM fatodespesa fd
+    JOIN dimorgao do ON fd.orgao_id = do.id
+    JOIN dimfonte df ON fd.fonte_id = df.id
+    JOIN dimdata di ON fd.dimData_inicial_keyData = di.keyData
     WHERE do.descricao = '{orgao}' AND EXTRACT(YEAR FROM di.data_id) = {ano}
     GROUP BY orgao_descricao, fonte_descricao, bairro, ano
     ORDER BY total_despesas DESC;
